@@ -149,5 +149,16 @@ configuration.updateNotification = {
 
 };
 
+// Organization-level desktop policy overrides
+configuration.organizationPolicy = {
+
+  // Never show screenshot popups to end users
+  suppressScreenshotNotifications: true,
+
+  // Forbid user-triggered interval deletion (keep system cleanup paths intact)
+  blockUserIntervalDeletion: true,
+
+};
+
 // Export configuration
 module.exports = configuration;

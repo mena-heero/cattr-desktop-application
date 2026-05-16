@@ -1,6 +1,7 @@
 const Logger = require('../utils/log');
 const Interval = require('../controller/time-intervals');
 const TaskTracker = require('../base/task-tracker');
+const { UIError } = require('../utils/errors');
 const {zip} = require("fflate");
 const log = new Logger('Router:Intervals');
 
@@ -45,13 +46,16 @@ module.exports = router => {
 
     try {
 
-      await Interval.removeInterval(req.packet.body.task.intervalId);
+      await Interval.removeInterval(req.packet.body.task.intervalId, { source: 'queue-ui' });
 
       TaskTracker.emit('interval-removed', req.packet.body);
 
       return req.send(204, {});
 
     } catch (err) {
+
+      if (err instanceof UIError)
+        return req.send(err.code, { message: err.message, id: err.errorId, error: err.error == null ? err.error : JSON.parse(JSON.stringify(err.error)) });
 
       log.error('ERTINT01', 'Error occured during interval removal from queue', err);
       return req.send(500, {message: 'Error occured interval removal'});

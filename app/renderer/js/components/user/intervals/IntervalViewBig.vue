@@ -27,19 +27,6 @@
     </p>
     <div class="interval__view_info">
       <small>{{ dateFormatted }} ({{ durationFormatted }})</small>
-      <el-tooltip
-        class="item"
-        effect="dark"
-        placement="top"
-        :content="$t('Remove')"
-      >
-        <el-button
-          type="text"
-          icon="el-icon-delete"
-          style="color: red"
-          @click="removeInterval"
-        />
-      </el-tooltip>
     </div>
     <img
       v-if="interval.screenshot"
@@ -122,51 +109,6 @@ export default {
         formattedString = `0${this.$t('s')}`;
 
       return formattedString;
-
-    },
-
-  },
-
-  methods: {
-
-    /**
-     * Removes the selected interval
-     * @async
-     */
-    async removeInterval() {
-
-      // Show loader
-      this.$store.dispatch('showLoader');
-
-      try {
-
-        // Requesting an interval removal operations on main process
-        console.log(this.interval);
-        const req = await this.$ipc.request('interval/remove', { duration: secondsBetween(this.interval.startAt, this.interval.endAt) - 1, task: { intervalId: this.interval.id, id: this.interval.Task.id }, });
-
-        // Throw an error if request wasn't successful
-        if (req.code !== 204)
-          throw new Error(req.body.message);
-
-        // TODO add time refresh here 
-        // like it does when the screenshot is removed 
-        // from the screenshot notification window
-
-        // Show a success message
-        this.$message({ type: 'success', message: this.$t('Interval successfully removed') });
-
-        // Remove node itself
-        this.$destroy();
-        this.$el.parentNode.removeChild(this.$el);
-
-      } catch (err) {
-
-        this.$message({ type: 'error', message: `${this.$t('Error')}: ${err}` });
-
-      }
-
-      // Hide loader
-      this.$store.dispatch('hideLoader');
 
     },
 

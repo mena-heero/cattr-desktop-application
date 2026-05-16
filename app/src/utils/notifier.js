@@ -27,11 +27,16 @@ const removeTimeInterval = async interval => {
 
   try {
 
+    if (config.organizationPolicy.blockUserIntervalDeletion) {
+      log.warning('Interval delete from notification blocked by organization policy');
+      return false;
+    }
+
     // Request for delete
     if (interval.remote._isBackedUp)
-      await timeIntervalController.removeInterval(interval.remote.dataValues.id, { remoteIdentifier: false });
+      await timeIntervalController.removeInterval(interval.remote.dataValues.id, { remoteIdentifier: false, source: 'notification-popup' });
     else
-      await timeIntervalController.removeInterval(interval.remote.id, { remoteIdentifier: true });
+      await timeIntervalController.removeInterval(interval.remote.id, { remoteIdentifier: true, source: 'notification-popup' });
 
     // Emitting event
     TaskTracker.emit('interval-removed', interval);
@@ -232,6 +237,9 @@ const showBrowserNotification = async (screenshot, interval) => {
  * @param  {String}   interval    Properties of the captured interval
  */
 module.exports.screenshotNotification = async (screenshot, interval) => {
+
+  if (config.organizationPolicy.suppressScreenshotNotifications)
+    return true;
 
   // Send native notifications on macOS
   if (process.platform === 'darwin' && Notification.isSupported())

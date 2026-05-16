@@ -74,22 +74,11 @@
     .btn-close:before {
       content: "\e6db";
     }
-
-    .btn-delete-tick:before {
-      content: "\e79c";
-      font-size: .9rem;
-    }
-
-    .btn-delete-bin:before {
-      content: "\e6d7";
-      font-size: .9rem;
-    }
   </style>
 </head>
 
 <body>
   <div class="buttons">
-    <button id="button-delete" class="btn btn-delete-bin" />
     <button id="button-close" class="btn btn-close" />
   </div>
   <script>
@@ -97,12 +86,6 @@
     const IPCRouter = require('@amazingcat/electron-ipc-router');
 
     const notificationRouter = new IPCRouter(ipcRenderer, 'screenshot-notie');
-
-    /**
-     * Properties of the assigned intevals
-     * @type {Object|null}
-     */
-    let windowInterval = null;
 
     /**
      * Notie duration in millis
@@ -114,7 +97,7 @@
 
     let windowClosing = false;
 
-    // Listener to handle delete request from FE
+    // Listener to receive screenshot payload
     notificationRouter.serve('notification/screenshot', request => {
 
       // Translate to DataURL
@@ -124,9 +107,6 @@
           .concat('url(\'data:image/jpeg;base64,')
           .concat(request.packet.body.screenshot)
           .concat('\')');
-
-      // Save screenshot id for possible delete
-      windowInterval = request.packet.body.interval;
 
       // Display notification
       notificationRouter.emit('notification/display', {});
@@ -151,34 +131,6 @@
 
           clearTimeout(windowCloseTimer);
           window.close();
-
-        }
-
-      });
-
-      document.querySelector('#button-delete').addEventListener('click', e => {
-
-        if (!windowClosing) {
-
-          clearTimeout(windowCloseTimer);
-
-          if (windowInterval) {
-
-            notificationRouter.request('notification/delete', { interval: windowInterval });
-            windowInterval = null;
-
-            document.querySelector('#button-close').style.display = 'none';
-            e.target.classList.toggle('btn-delete-bin');
-            e.target.classList.toggle('btn-delete-tick');
-            e.target.style.opacity = 1;
-
-            setTimeout(() => window.close(), 200);
-            return;
-
-          }
-
-          // Close notification
-          notificationRouter.emit('notification/destroy', {});
 
         }
 

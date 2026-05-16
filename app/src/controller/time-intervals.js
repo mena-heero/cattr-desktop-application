@@ -5,7 +5,9 @@ const api = require('../base/api');
 const database = require('../models').db.models;
 const sequelize = require('../models').db.sequelize;
 const Log = require('../utils/log');
+const { UIError } = require('../utils/errors');
 const OfflineMode = require('../base/offline-mode');
+const config = require('../base/config');
 const {Op} = require("sequelize");
 
 const log = new Log('Controller:Time-Intervals');
@@ -410,6 +412,14 @@ module.exports.removeInterval = async (id, opts) => {
 
   if (!interval)
     throw new Error(`Interval #${id} does not exist`);
+
+  const source = opts && opts.source ? opts.source : 'system';
+  if (
+    config.organizationPolicy.blockUserIntervalDeletion
+    && ['queue-ui', 'notification-popup'].includes(source)
+  ) {
+    throw new UIError(403, 'Interval deletion is restricted by organization policy', 'INTDEL403');
+  }
 
   // Destroy interval on remote if it is synced
   if (interval.synced)

@@ -4,6 +4,7 @@ const Logger = require('../utils/log');
 const osIntegration = require('../base/os-integration');
 const userPreferences = require('../base/user-preferences');
 const EMPTY_IMAGE = require('../constants/empty-screenshot');
+const config = require('../base/config');
 
 const log = new Logger('Screen-Notifier');
 
@@ -11,6 +12,8 @@ tracker.on('interval-pushed', data => {
 
   // Do not show notie is application is about to quit or application window is not exists
   if (
+    config.organizationPolicy.suppressScreenshotNotifications
+    ||
     osIntegration.isApplicationClosingNow
     || !osIntegration.window
     || !userPreferences.get('showScreenshotNotification')

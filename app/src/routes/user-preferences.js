@@ -6,6 +6,13 @@ const userPreferences = require('../base/user-preferences');
 const log = new Logger('Router:UserPreferences');
 log.debug('Loaded');
 
+const SCREENSHOT_NOTIFICATION_PREFERENCE_KEYS = [
+  'showScreenshotNotification',
+  'screenshotNotificationTime',
+];
+
+const shouldHideScreenshotNotificationPreferences = () => config.organizationPolicy.suppressScreenshotNotifications;
+
 module.exports = router => {
 
   /**
@@ -16,8 +23,13 @@ module.exports = router => {
     try {
 
       const preferences = await userPreferences.exportWithStructure();
+      const filteredPreferences = { ...preferences };
+
+      if (shouldHideScreenshotNotificationPreferences())
+        SCREENSHOT_NOTIFICATION_PREFERENCE_KEYS.forEach(key => delete filteredPreferences[key]);
+
       return request.send(200, {
-        preferences,
+        preferences: filteredPreferences,
         version: {
           package: config.packageId,
           number: config.packageVersion,
@@ -52,11 +64,15 @@ module.exports = router => {
 
       // Extract and check preferences list
       const { preferences } = request.packet.body;
-      if (typeof preferences !== 'object')
+      if (!preferences || typeof preferences !== 'object')
         throw new UIError(400, 'Incorrect preferences container received', 'ERTU400');
 
+      const sanitizedPreferences = { ...preferences };
+      if (shouldHideScreenshotNotificationPreferences())
+        SCREENSHOT_NOTIFICATION_PREFERENCE_KEYS.forEach(key => delete sanitizedPreferences[key]);
+
       // Apply changes
-      userPreferences.setMany(preferences).commit();
+      userPreferences.setMany(sanitizedPreferences).commit();
       return request.send(200, {});
 
     } catch (error) {

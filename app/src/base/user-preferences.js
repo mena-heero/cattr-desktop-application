@@ -36,7 +36,7 @@ const preferences = {
     description: 'Should we notify you about captured screenshot?',
 
     // Default value
-    default: true,
+    default: false,
 
     // Frontend configuration for Preferences page
     frontend: {
